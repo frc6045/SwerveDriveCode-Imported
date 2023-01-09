@@ -7,6 +7,7 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.kinematics.MecanumDriveWheelSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveDriveOdometry;
+import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.wpilibj.ADIS16470_IMU;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -56,7 +57,7 @@ public class SwerveSubsystem extends SubsystemBase
     //this requires another library but I dont know if we are using this gyro or not
     // so we will use the old one that i know we have
     private ADIS16470_IMU gyro = new ADIS16470_IMU();
-    private final SwerveDriveOdometry m_Odometry = new SwerveDriveOdometry(DriveConstants.kDriveKinematics, new Rotation2d(0));
+    private final SwerveDriveOdometry m_Odometry = new SwerveDriveOdometry(DriveConstants.kDriveKinematics, new Rotation2d(0), getModulePositions());
 
     public SwerveSubsystem()
     {
@@ -160,6 +161,17 @@ public class SwerveSubsystem extends SubsystemBase
         backRight.setDesiredState(desiredStates[3]);
     }
 
+    public SwerveModulePosition[] getModulePositions()
+    {
+        SwerveModulePosition[] positionArray = new SwerveModulePosition[4];
+        positionArray[0] = frontLeft.getPosition();
+        positionArray[1] = frontLeft.getPosition();
+        positionArray[2] = backLeft.getPosition();
+        positionArray[3] = backRight.getPosition();
+        return positionArray;
+
+    }
+
 
     // probably is not needed but I have it in here in case I do any experimenting or something
     public void resetEncoders()
@@ -176,12 +188,12 @@ public class SwerveSubsystem extends SubsystemBase
         /*
         resetEncoders();
         */
-        m_Odometry.resetPosition(new Pose2d(), getRotation2d());
+        m_Odometry.resetPosition(getRotation2d(), getModulePositions(), new Pose2d());
     }
 
     public void resetPoseTo(Pose2d pose)
     {
-        m_Odometry.resetPosition(pose, getRotation2d());
+        m_Odometry.resetPosition(getRotation2d(), getModulePositions(), pose);
 
     }
 
@@ -189,7 +201,7 @@ public class SwerveSubsystem extends SubsystemBase
     @Override
     public void periodic()
     {
-        m_Odometry.update(getRotation2d(), getModuleStates());
+        m_Odometry.update(getRotation2d(), getModulePositions());
         SmartDashboard.putNumber("Robot Heading", getHeading());
         SmartDashboard.putNumber("average distance traveled in Meters", getAverageDistanceMeters());
         SmartDashboard.putString("Robot Location", getPose().getTranslation().toString());
